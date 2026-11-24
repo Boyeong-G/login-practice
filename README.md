@@ -20,7 +20,9 @@
 - **Authentication**: JWT, OAuth 2.0
 - **Password**: BCrypt
 - **Social Login**: Kakao OAuth
-- **Token Storage**: Redis
+- **Testing**: JUnit 5, Mockito, Spring Boot Test
+- **Database**: MySQL
+- **Cache / Token Storage**: Redis
 
 ## 3. 주요 기능
 
@@ -33,8 +35,8 @@
 
 ### 3.2 소셜 로그인 (OAuth 2.0)
 - 카카오 OAuth 로그인 구현
-- OAuth 인증 결과를 이용한 사용자 정보 획득
-- 이메일 기준 기존 사용자 조회 및 신규 사용자 생성
+- OAuth 인증 결과를 이용한 사용자 정보 조회
+- 이메일을 기준으로 기존 사용자 조회 및 신규 사용자 생성
 - 소셜 로그인 성공 후 JWT 발급 및 클라이언트 전달
 - 구글 및 네이버 로그인은 미구현
 
@@ -44,6 +46,10 @@
 - 게스트 계정에서 로컬 계정으로 전환
 - 기존 게스트 계정의 사용자 ID를 유지하는 계정 전환 구조
 - 게스트 계정에서 소셜 계정으로 전환하는 기능은 미구현
+
+### 3.4 로그아웃
+- 로그아웃 요청 시 Redis에 저장된 Refresh Token 삭제
+- 이후 Refresh Token을 이용한 재발급 방지
 
 ## 4. API 명세
 
@@ -97,14 +103,36 @@ Refresh Token을 이용한 재발급 요청 시 JWT 유효성을 검증하고, R
 - **게스트 로그인**: Device ID 기반 게스트 계정 조회 또는 생성 → JWT 발급 → Redis에 Refresh Token 저장
 - **계정 전환**: 기존 게스트 계정 조회 → 사용자 ID 유지 → 로컬 회원 정보 및 권한으로 변경
 
-## 8. 향후 개선 사항
+## 8. 테스트
+
+### 테스트 환경
+- JUnit 5
+- Mockito
+- Spring Boot Test
+
+### 테스트 결과
+
+| ID | 테스트 시나리오 | 결과 |
+|---|---|---|
+| AUTH-01 | 새로운 Device ID로 게스트 계정 생성 | PASS |
+| AUTH-02 | 동일한 Device ID로 기존 게스트 계정 재사용 | PASS |
+| AUTH-03 | 게스트 계정을 로컬 계정으로 전환 및 기존 ID 유지 | PASS |
+| AUTH-04 | 유효한 Refresh Token으로 재발급 | PASS |
+| AUTH-05 | Redis에 저장된 Refresh Token과 요청 토큰 불일치 시 재발급 실패 | PASS |
+
+- AuthService 단위 테스트: 5개
+- 성공: 5개
+- 실패: 0개
+- GitHub Actions CI: 통과
+
+## 9. 향후 개선 사항
 
 - 구글 OAuth 로그인 추가
 - 네이버 OAuth 로그인 추가
 - 게스트 계정의 소셜 계정 연동 및 전환 정책 수립
 - 기존 게스트 데이터와 소셜 계정 데이터의 병합 및 중복 처리 방안 검토
 
-## 9. 작업 결과
+## 10. 작업 결과
 
 모바일 애플리케이션을 위한 인증 기능으로 이메일 및 비밀번호 기반 로컬 로그인, JWT 기반 인증, 카카오 소셜 로그인 및 게스트 계정에서 로컬 계정으로 전환하는 기능을 구현하였다.
 
